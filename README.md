@@ -1,2 +1,2 @@
-# p_code
+# P-code
 P-code interpreter in C.
