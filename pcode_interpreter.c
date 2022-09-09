@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define LEVMAX 3 /* maximum depth of block nesting */
 #define CXMAX 200 /* size of code array */
 #define STACKESIZE 500
 
@@ -15,7 +16,6 @@ typedef struct {
 
 /* global variables */
 instruction *code; /* code */
-int code_len; /* code row amount */
 int p, b, t; /* program register, base register, topstack register */
 instruction i; /* instruction register */
 int s[STACKESIZE] = {0}; /* datastore */
@@ -83,27 +83,6 @@ void fct_to_string(fct f, char *fct_str) {
   }
 }
 
-void read_file_code(FILE *file) {
-  char f[4];
-  code_len = 0;
-
-  while (!feof(file))
-  {
-    if(code_len > CXMAX) {
-      break;
-    }
-
-    code_len += 1;
-    code = (instruction *) realloc(code, sizeof(instruction) * code_len);
-
-    fscanf(file, "%s %d %d", f, &(code[code_len - 1].l), &(code[code_len - 1].a));
-
-    code[code_len - 1].f = fct_to_enum(f);
-  }
-
-  fclose(file);
-}
-
 int base(int l) {
   int b1 = b;
 
@@ -116,18 +95,30 @@ int base(int l) {
 }
 
 void interpret() {
+  char f[4];
+  int code_len = 0;
+
   t = 0; b = 1; p = 0;
   s[1] = 0; s[2] = 0; s[3] = 0;
 
   int row_counter = 1;
   int iterator;
-  char fct_str[4];
 
   printf("start pl/0");
-  printf("\n\n");
+  printf("\n");
 
   do {
+    code_len += 1;
+    code = (instruction *) realloc(code, sizeof(instruction) * code_len);
+
+    scanf("%s %d %d\n", f, &(code[code_len - 1].l), &(code[code_len - 1].a));
+    code[code_len - 1].f = fct_to_enum(f);
+
     i = code[p]; p += 1;
+
+    printf("\n\t%d.", p);
+    fct_to_string(i.f, f);
+    printf(" Instruction => %s %d %d\t|", f, i.l, i.a);
 
     switch(i.f) {
       case LIT:
@@ -237,34 +228,24 @@ void interpret() {
         break;
     }
 
-    printf("\t%d.", p);
-    fct_to_string(i.f, fct_str);
-    printf(" Instruction => %s %d %d\t|", fct_str, i.l, i.a);
     printf(" P => %d; B => %d; T => %d;\t|", p, b, t);
     printf(" Stack => ");
     for(iterator = 1; iterator <= t; ++iterator) {
       printf("[%d]", s[iterator]);
     }
-    printf("\n\n");
+    printf("\n");
+  } while(p != 0);
+  pipes_counter = 0;
+  while(pipes_counter < (LEVMAX - 1) && iterator != pipes[pipes_counter]) {
+    printf("%d\n", pipes[pipes_counter]);
+    pipes_counter += 1;
+  }
 
-    row_counter += 1;
-  } while(p < code_len && p != 0);
-
-  printf("end pl/0\n");
+  printf("\nend pl/0\n");
 }
 
-int main(int argc, char *argv[]) {
-  if(argc == 2) {
-    FILE *file;
+int main(void) {
+  interpret();
 
-    file = fopen (argv[1], "r");
-    code = malloc(sizeof(instruction));
-    read_file_code(file);
-
-    interpret();
-  } else {
-    printf("Expected 1 arguments (FILE NAME)!\n");
-  }
-  
   return 0;
 }
