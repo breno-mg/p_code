@@ -83,23 +83,19 @@ void fct_to_string(fct f, char *fct_str) {
   }
 }
 
-void read_file_code(FILE *file) {
+void read_code() {
   char f[4];
+  int l, a;
   code_len = 0;
 
-  while (!feof(file))
+  while(code_len < CXMAX && scanf("%s %d %d", f, &l, &a) != EOF)
   {
-    if(code_len == CXMAX) {
-      break;
-    }
-
-    fscanf(file, "%s %d %d", f, &(code[code_len].l), &(code[code_len].a));
     code[code_len].f = fct_to_enum(f);
+    code[code_len].l = l;
+    code[code_len].a = a;
 
     code_len += 1;
   }
-
-  fclose(file);
 }
 
 int base(int l) {
@@ -252,17 +248,10 @@ void interpret() {
   printf("\nend pl/0\n");
 }
 
-int main(int argc, char *argv[]) {
-  if(argc == 2) {
-    FILE *file;
+int main(void) {
+  read_code();
 
-    file = fopen (argv[1], "r");
-    read_file_code(file);
-
-    interpret();
-  } else {
-    printf("Expected 1 arguments (FILE NAME)!\n");
-  }
+  interpret();
   
   return 0;
 }
